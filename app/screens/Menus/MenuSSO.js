@@ -21,7 +21,7 @@ export default function MenuScreen({ navigation }) {
 
   const menuItems = [
     { text: 'Crear Reporte', imageSource: require('../../src/img/ReporteDes.png'), screenName: 'ReporteSSO' },
-    { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'Lista de Reportes' },
+    { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'CorreccionSSO' },
   ];
 
   return (

@@ -15,6 +15,7 @@ import ReporteDesechos from "../screens/ReporteDesechos"
 import ListaReportes from "../screens/ListaReportes";
 import SSO from "../screens/Menus/MenuSSO"
 import ReporteSSO from "../screens/ReporteSSO";
+import CorreccionSSO from "../screens/CorreccionSSO";
 const Stack = createStackNavigator();
 
 const StackOneNavigator = () => (
@@ -85,6 +86,11 @@ const StackOneNavigator = () => (
     <Stack.Screen 
       name="ReporteSSO" 
       component={ReporteSSO} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="CorreccionSSO" 
+      component={CorreccionSSO} 
       options={{ headerShown: false }} 
     />
   </Stack.Navigator>
