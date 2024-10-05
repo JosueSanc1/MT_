@@ -28,7 +28,7 @@ let db = openDatabase({ name: 'MadreTierraProduccion100.db' });
 export default function CrearInformeScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
-
+  const [isInspectionLocked, setIsInspectionLocked] = useState(false);
   const [fecha, setFecha] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -52,7 +52,9 @@ export default function CrearInformeScreen() {
         estado TEXT
       );
     `, []);
-
+      
+    txn.executeSql('CREATE TABLE IF NOT EXISTS DetalleInforme ( idDetalle INTEGER PRIMARY KEY AUTOINCREMENT, idInforme INTEGER, descripcion TEXT, foto1 TEXT, foto2 TEXT, estado TEXT, FOREIGN KEY (idInforme) REFERENCES table_informes(id) );',[]);
+  
     txn.executeSql(`
       CREATE TABLE IF NOT EXISTS tipo_inspeccion (
         id INTEGER PRIMARY KEY,
@@ -105,6 +107,32 @@ export default function CrearInformeScreen() {
     }
   };
 
+  const verDatosGuardados = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM DetalleInforme',
+        [],
+        (tx, results) => {
+          const rows = results.rows;
+          let data = [];
+
+          for (let i = 0; i < rows.length; i++) {
+            data.push(rows.item(i));
+          }
+
+          console.log("Datos guardados en ReporteDesechos:", data);
+        },
+        (tx, error) => {
+          console.log("Error al consultar la tabla ReporteDesechos:", error);
+        }
+      );
+    });
+  };
+       // useEffect para ejecutar la consulta cuando la vista se carga
+  useEffect(() => {
+    verDatosGuardados(); // Llamar la función para ver los datos guardados cuando el componente se monta
+  }, []);
+
   const loadLocalData = () => {
     return new Promise((resolve, reject) => {
       db.transaction(txn => {
@@ -138,6 +166,7 @@ export default function CrearInformeScreen() {
               'CREATE TABLE IF NOT EXISTS table_informes(id INTEGER PRIMARY KEY AUTOINCREMENT, reporte TEXT,fecha DATE, user_created_id INT, usuario_movil_id INT, area_id INT, tipo_inspeccion_id INT, estado NVARCHAR(50))',
               []
             );
+            
           }
         },
       );
@@ -180,19 +209,29 @@ export default function CrearInformeScreen() {
   const handleSelectPhoto = async (photoIndex) => {
     const result = await launchImageLibrary(options);
     if (result && result.assets && result.assets.length > 0) {
+      const imagePath = result.assets[0].uri;
+  
+      // Convertir la imagen a base64
+      const base64Image = await RNFetchBlob.fs.readFile(imagePath, 'base64');
+      
       const newHallazgo = { ...currentHallazgo };
-      newHallazgo.fotos[photoIndex] = result.assets[0].uri;
+      newHallazgo.fotos[photoIndex] = `data:image/jpeg;base64,${base64Image}`; // Almacena la imagen como base64
       setCurrentHallazgo(newHallazgo);
     }
   };
-
+  
   const handleTakePhoto = async (photoIndex) => {
     const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
       const result = await launchCamera(options);
       if (result && result.assets && result.assets.length > 0) {
+        const imagePath = result.assets[0].uri;
+  
+        // Convertir la imagen a base64
+        const base64Image = await RNFetchBlob.fs.readFile(imagePath, 'base64');
+        
         const newHallazgo = { ...currentHallazgo };
-        newHallazgo.fotos[photoIndex] = result.assets[0].uri;
+        newHallazgo.fotos[photoIndex] = `data:image/jpeg;base64,${base64Image}`; // Almacena la imagen como base64
         setCurrentHallazgo(newHallazgo);
       }
     }
@@ -203,7 +242,7 @@ export default function CrearInformeScreen() {
       Alert.alert('Error', 'Por favor, complete la descripción y añada al menos una foto.');
       return;
     }
-
+    setIsInspectionLocked(true);
     setHallazgos([...hallazgos, currentHallazgo]);
     setCurrentHallazgo({ descripcion: '', fotos: ['', ''] });
   };
@@ -420,46 +459,59 @@ export default function CrearInformeScreen() {
     };
 
     try {
+      // Generar el PDF
       const pdfFile = await RNHTMLtoPDF.convert(options);
-      setPdfPath(pdfFile.filePath);
-
       const pdfBase64 = await RNFetchBlob.fs.readFile(pdfFile.filePath, 'base64');
-
-      const informesDir = `${RNFetchBlob.fs.dirs.DownloadDir}/Informes`;
+      
       const destinationPath = `${informesDir}/Informe_${formattedDate}.pdf`;
-
+  
       db.transaction(txn => {
+        // Inserción del informe en `table_informes`
         txn.executeSql(
           'INSERT INTO table_informes (reporte, fecha, user_created_id, usuario_movil_id, area_id, tipo_inspeccion_id, estado) VALUES (?,?,?,?,?,?,?)',
-          [pdfBase64, initialState.fecha.toISOString(), user.id, user.id, selectedArea, selectedTipoInspeccion, "N"],
-          (tex, res) => {
-            if (res.rowsAffected == 1) {
+          [pdfBase64, currentDate.toISOString(), user.id, user.id, selectedArea, selectedTipoInspeccion, "N"],
+          (tx, res) => {
+            const idInforme = res.insertId;  // Obtener el ID del informe recién insertado
+  
+            if (idInforme) {
+              // Inserción de los hallazgos en `DetalleInforme`
+              hallazgos.forEach((hallazgo) => {
+                txn.executeSql(
+                  'INSERT INTO DetalleInforme (idInforme, descripcion, foto1, foto2, estado) VALUES (?,?,?,?,?)',
+                  [idInforme, hallazgo.descripcion, hallazgo.fotos[0], hallazgo.fotos[1], "N"],
+                  (tx, res) => {
+                    console.log('Hallazgo insertado:', res);
+                  },
+                  (error) => {
+                    console.log('Error al insertar hallazgo:', error);
+                  }
+                );
+              });
+  
+              // Confirmación al usuario
               Alert.alert(
                 'ÉXITO',
-                'Informe Creado',
+                'Informe Creado y Hallazgos guardados.',
                 [{ text: 'Ok' }],
                 { cancelable: false }
               );
             } else {
-              console.log(res);
+              console.error('Error al obtener el ID del informe.');
             }
           },
           error => {
-            console.log(error);
+            console.error('Error al insertar informe:', error);
           }
         );
       });
-
+  
+      // Mover el archivo PDF a la carpeta de informes
       RNFetchBlob.fs.isDir(informesDir).then((isDir) => {
         if (!isDir) {
+          // Crear carpeta si no existe
           RNFetchBlob.fs.mkdir(informesDir).then(() => {
             RNFetchBlob.fs.mv(pdfFile.filePath, destinationPath).then(() => {
-              Alert.alert(
-                'ÉXITO',
-                'Informe guardado en la carpeta de informes.',
-                [{ text: 'Ok' }],
-                { cancelable: false }
-              );
+              console.log('PDF movido exitosamente.');
             }).catch((error) => {
               console.error('Error al mover el PDF:', error);
             });
@@ -468,12 +520,7 @@ export default function CrearInformeScreen() {
           });
         } else {
           RNFetchBlob.fs.mv(pdfFile.filePath, destinationPath).then(() => {
-            Alert.alert(
-              'ÉXITO',
-              'Informe guardado en la carpeta de informes',
-              [{ text: 'Ok' }],
-              { cancelable: false }
-            );
+            console.log('PDF movido exitosamente.');
           }).catch((error) => {
             console.error('Error al mover el PDF:', error);
           });
@@ -481,10 +528,11 @@ export default function CrearInformeScreen() {
       }).catch((error) => {
         console.error('Error al verificar la carpeta de informes:', error);
       });
+  
+      limpiarCampos(); // Limpiar los campos del formulario después de guardar
     } catch (error) {
-      console.error(error);
+      console.error('Error en generatePdf:', error);
     }
-    limpiarCampos();
   };
 
   return (
@@ -504,6 +552,7 @@ export default function CrearInformeScreen() {
           style={styles.input}
           selectedValue={selectedArea}
           onValueChange={(itemValue) => handleAreaChange(itemValue)}
+          enabled={!isInspectionLocked}  // Deshabilitar si está bloqueado
         >
           <Picker.Item label='Seleccione un área' value="" />
           {areas.map((area) => (
@@ -511,7 +560,7 @@ export default function CrearInformeScreen() {
           ))}
         </Picker>
         <Text style={styles.margeLeft}>Fecha:</Text>
-        <TouchableOpacity onPress={showDatePicker}>
+        <TouchableOpacity onPress={showDatePicker} disabled={isInspectionLocked}>
           <Text style={styles.inputFecha}>{format(fecha, 'dd/MM/yyyy')}</Text>
         </TouchableOpacity>
         <DateTimePickerModal
@@ -519,12 +568,14 @@ export default function CrearInformeScreen() {
           mode="date"
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
+          disabled={isInspectionLocked}  // Deshabilitar si está bloqueado
         />
         <Text style={styles.margeLeft}>Tipo de Inspección:</Text>
         <Picker
           style={styles.input}
           selectedValue={selectedTipoInspeccion}
           onValueChange={(itemValue) => handleTipoInspeccionChange(itemValue)}
+          enabled={!isInspectionLocked}  // Deshabilitar si está bloqueado
         >
           <Picker.Item label='Seleccione un tipo de inspección' value="" />
           {tiposInspeccion.map((tipo) => (
@@ -533,7 +584,8 @@ export default function CrearInformeScreen() {
         </Picker>
         <Text></Text>
       </View>
-
+  
+      {/* Sección de hallazgo */}
       <View style={styles.card}>
         <Text style={styles.textHallazgo}>HALLAZGO</Text>
         <Text style={styles.margeLeft}>Descripción:</Text>
@@ -557,36 +609,35 @@ export default function CrearInformeScreen() {
         </View>
         <View style={{ flex: 1, flexDirection: 'row', marginBottom: 20 }}>  
           <View style={{ flex: 1, marginRight: 5 }}>
-           <Button title='Seleccionar foto' onPress={() => handleSelectPhoto(0)} />
-         </View>
-        <View style={{ flex: 1, marginLeft: 5 }}>
-           <Button title='Tomar foto' onPress={() => handleTakePhoto(0)} />
-         </View>
+            <Button title='Seleccionar foto' onPress={() => handleSelectPhoto(0)} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 5 }}>
+            <Button title='Tomar foto' onPress={() => handleTakePhoto(0)} />
+          </View>
         </View>
         <Text> </Text>
         <Text style={styles.textEvidencia}>Fotografía de Evidencia (2)</Text>
-<View style={styles.container}>
-  {currentHallazgo.fotos[1] ? (
-    <Image
-      source={{ uri: currentHallazgo.fotos[1] }}
-      style={styles.evidenceImage}
-    />
-  ) : (
-    <Text style={styles.textSinFoto}>No hay foto seleccionada o tomada</Text>
-  )}
-</View>
-<View style={{ flex: 1, flexDirection: 'row', marginBottom: 20 }}>  
-  <View style={{ flex: 1, marginRight: 5 }}>
-    <Button title='Seleccionar foto' onPress={() => handleSelectPhoto(1)} />
-  </View>
-  <View style={{ flex: 1, marginLeft: 5 }}>
-    <Button title='Tomar foto' onPress={() => handleTakePhoto(1)} />
-  </View>
-</View>
-<Button title='Guardar Hallazgo' onPress={addHallazgo} />
-
+        <View style={styles.container}>
+          {currentHallazgo.fotos[1] ? (
+            <Image
+              source={{ uri: currentHallazgo.fotos[1] }}
+              style={styles.evidenceImage}
+            />
+          ) : (
+            <Text style={styles.textSinFoto}>No hay foto seleccionada o tomada</Text>
+          )}
+        </View>
+        <View style={{ flex: 1, flexDirection: 'row', marginBottom: 20 }}>  
+          <View style={{ flex: 1, marginRight: 5 }}>
+            <Button title='Seleccionar foto' onPress={() => handleSelectPhoto(1)} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 5 }}>
+            <Button title='Tomar foto' onPress={() => handleTakePhoto(1)} />
+          </View>
+        </View>
+        <Button title='Guardar Hallazgo' onPress={addHallazgo} />
       </View>
-
+  
       <Text> </Text>
       <Button title="Finalizar Informe" onPress={handleSave} />
     </ScrollView>

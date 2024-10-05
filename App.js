@@ -41,6 +41,8 @@ const App = () => {
     }
   };
 
+ 
+
   const saveDataToLocalDatabase = (users) => {
     db.transaction((txn) => {
       txn.executeSql('DROP TABLE IF EXISTS usuarios', []);

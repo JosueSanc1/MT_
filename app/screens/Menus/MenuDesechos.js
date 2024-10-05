@@ -13,59 +13,81 @@ import { openDatabase } from 'react-native-sqlite-storage';
 import moment from 'moment';
 import { useAuth } from '../AuthContext';
 
-
-
-
 const { width } = Dimensions.get('window');
 
 export default function MenuScreen({ navigation }) {
   const db = openDatabase({ name: 'MadreTierraProduccion100.db' });
   const { user } = useAuth();
+
   const navigateToScreen = (screenName) => {
     navigation.navigate(screenName);
   };
 
+  // Sincronización de reportes y detalles
   const handleSyncReports = async () => {
     try {
-      
-      // Obtener informes no sincronizados de la base de datos
+      // Obtener reportes y detalles no sincronizados
       const unsyncedReports = await getUnsyncedReports();
+      const unsyncedDetails = await getUnsyncedDetails();
 
       if (unsyncedReports.length === 0) {
         Alert.alert('Información', 'No hay informes para sincronizar.');
         return;
       }
 
-      // Preparar los datos para enviar al servidor
+      // Preparar los datos de reportes
       const reportsToSync = unsyncedReports.map((report) => ({
-        id: report.id,
-        reporte: report.reporte,
+        id: report.IdReporte,
+        reporte: report.Reporte,
+        responsable: report.Responsable,
+        proceso: report.Proceso,
+        observacion: report.Observacion,
+        fecha: report.Fecha,
         user_created_id: report.user_created_id,
-        syncronizado: report.fecha,
         usuario_movil_id: report.usuario_movil_id,
-        area_id: report.area_id,
-        tipo_inspeccion_id: report.tipo_inspeccion_id,
       }));
 
-      // Realizar la sincronización con el servidor
-      await syncReportsWithServer(reportsToSync);
+      // Preparar los datos de detalles
+      const detailsToSync = unsyncedDetails.map((detail) => ({
+        id_detalle: detail.IdDetalle,
+        id_reporte: detail.IdReporte,
+        ubicaciones: detail.Ubicaciones,
+        suficientes: detail.Suficientes,
+        rotulados: detail.Rotulados,
+        tapados: detail.Tapados,
+        limpios: detail.Limpios,
+        ordenados: detail.Ordenados,
+        recoleccion_frecuente: detail.RecoleccionFrecuente,
+        carton: detail.Carton,
+        plasticos: detail.Plasticos,
+        metales: detail.Metales,
+        organicos: detail.Organicos,
+        electronicos: detail.Electronicos,
+        inorganicos: detail.Inorganicos,
+        porcentaje_total: detail.porcentajeTotal,
+        observacion: detail.Observacion,
+      }));
 
-      // Marcar los informes como sincronizados en la base de datos
+      // Sincronizar ambos con el servidor
+      await syncReportsWithServer(reportsToSync, detailsToSync);
+
+      // Marcar como sincronizados en la base de datos
       await markReportsAsSynced(unsyncedReports);
+      await markDetailsAsSynced(unsyncedDetails);
 
-      Alert.alert('Éxito', 'Informes sincronizados correctamente.');
-      console.log;
+      Alert.alert('Éxito', 'Informes y detalles sincronizados correctamente.');
     } catch (error) {
       console.error('Error durante la sincronización:', error);
       Alert.alert('Error', 'Hubo un error durante la sincronización.');
     }
   };
 
+  // Obtener reportes no sincronizados
   const getUnsyncedReports = () => {
     return new Promise((resolve, reject) => {
       db.transaction((txn) => {
         txn.executeSql(
-          'SELECT * FROM table_informes WHERE estado != "S"',
+          'SELECT * FROM ReporteDesechos WHERE estado != "S"',
           [],
           (_, result) => {
             const reports = [];
@@ -83,9 +105,32 @@ export default function MenuScreen({ navigation }) {
     });
   };
 
-  const syncReportsWithServer = async (reports) => {
+  // Obtener detalles no sincronizados
+  const getUnsyncedDetails = () => {
+    return new Promise((resolve, reject) => {
+      db.transaction((txn) => {
+        txn.executeSql(
+          'SELECT * FROM DetalleReporteDesechos WHERE estado != "S"',
+          [],
+          (_, result) => {
+            const details = [];
+            for (let i = 0; i < result.rows.length; ++i) {
+              details.push(result.rows.item(i));
+            }
+            resolve(details);
+          },
+          (_, error) => {
+            console.error('Error al obtener detalles no sincronizados:', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  };
+
+  // Sincronizar con el servidor
+  const syncReportsWithServer = async (reports, details) => {
     const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadReportes';
-    
 
     try {
       const response = await RNFetchBlob.fetch(
@@ -95,21 +140,11 @@ export default function MenuScreen({ navigation }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
-        JSON.stringify({ reportes: reports })
+        JSON.stringify({ reportes: reports, detalles: details })
       );
 
       const responseText = await response.text();
-
-      console.log('Respuesta del servidor:', responseText);
-
-    // Intentar analizar la respuesta como JSON
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-    } catch (error) {
-      console.error('Error al analizar la respuesta JSON:', error);
-      throw new Error('Error en la sincronización');
-    }
+      const responseData = JSON.parse(responseText);
 
       if (responseData.status === 200) {
         console.log('Sincronización exitosa:', responseData);
@@ -123,14 +158,15 @@ export default function MenuScreen({ navigation }) {
     }
   };
 
+  // Marcar reportes como sincronizados
   const markReportsAsSynced = (reports) => {
     return new Promise((resolve, reject) => {
       db.transaction((txn) => {
-        const reportIds = reports.map((report) => report.id);
+        const reportIds = reports.map((report) => report.IdReporte);
         const placeholders = Array(reportIds.length).fill('?').join(',');
 
         txn.executeSql(
-          `UPDATE table_informes SET estado = "S" WHERE id IN (${placeholders})`,
+          `UPDATE ReporteDesechos SET estado = "S" WHERE IdReporte IN (${placeholders})`,
           reportIds,
           (_, result) => {
             resolve(result);
@@ -144,13 +180,39 @@ export default function MenuScreen({ navigation }) {
     });
   };
 
+  // Marcar detalles como sincronizados
+  const markDetailsAsSynced = (details) => {
+    return new Promise((resolve, reject) => {
+      db.transaction((txn) => {
+        const detailIds = details.map((detail) => detail.IdDetalle);
+        const placeholders = Array(detailIds.length).fill('?').join(',');
+
+        txn.executeSql(
+          `UPDATE DetalleReporteDesechos SET estado = "S" WHERE IdDetalle IN (${placeholders})`,
+          detailIds,
+          (_, result) => {
+            resolve(result);
+          },
+          (_, error) => {
+            console.error('Error al marcar detalles como sincronizados:', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  };
+
+  // Menú de reportes de desechos
   const menuItems = [
-    
     { text: 'Crear Reporte', imageSource: require('../../src/img/ReporteDes.png'), screenName: 'Reporte Desechos' },
     { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'Lista de Reportes' },
-   
-
+    {
+      text: 'Sincronizar Reportes',
+      imageSource: require('../../src/img/sincronizar.png'),
+      onPress: syncReportsWithServer,
+    },
   ];
+
   const handleMenuItemPress = (screenName, onPress) => {
     if (onPress) {
       onPress(); // Ejecutar la función personalizada si está definida
@@ -174,16 +236,14 @@ export default function MenuScreen({ navigation }) {
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
-          key={index}
-          style={styles.menuButton}
-          onPress={() => handleMenuItemPress(item.screenName, item.onPress)}
-        >
-          <Image source={item.imageSource} style={styles.buttonImage} />
-          <Text style={styles.buttonText}>{item.text}</Text>
-        </TouchableOpacity>
+            key={index}
+            style={styles.menuButton}
+            onPress={() => handleMenuItemPress(item.screenName, item.onPress)}
+          >
+            <Image source={item.imageSource} style={styles.buttonImage} />
+            <Text style={styles.buttonText}>{item.text}</Text>
+          </TouchableOpacity>
         ))}
-
-        
       </View>
     </View>
   );
@@ -202,7 +262,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     position: 'absolute',
-    marginBottom:10,
+    marginBottom: 10,
     top: 0,
   },
   headerText: {
@@ -229,19 +289,26 @@ const styles = StyleSheet.create({
   menuButton: {
     backgroundColor: 'white',
     width: (width / 2) - 16,
-    margin: 8,
-    padding: 10,
-    borderRadius: 5,
-    borderColor: 'black',
-    borderWidth: 1,
+    height: 180,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   buttonImage: {
-    width: 50,
-    height: 50,
+    width: 90,
+    height: 90,
   },
   buttonText: {
-    color: 'black',
-    fontSize: 18,
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
