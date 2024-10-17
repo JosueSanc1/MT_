@@ -15,6 +15,35 @@ const { width } = Dimensions.get('window');
 export default function MenuScreen({ navigation }) {
   const { user } = useAuth();
 
+  const syncReportsWithServer = async (reports, details) => {
+    const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadReportes';
+
+    try {
+      const response = await RNFetchBlob.fetch(
+        'POST',
+        apiUrl,
+        {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        JSON.stringify({ reportes: reports, detalles: details })
+      );
+
+      const responseText = await response.text();
+      const responseData = JSON.parse(responseText);
+
+      if (responseData.status === 200) {
+        console.log('Sincronización exitosa:', responseData);
+      } else {
+        console.error('Error en la sincronización:', responseData);
+        throw new Error('Error en la sincronización');
+      }
+    } catch (error) {
+      console.error('Error en la sincronización:', error);
+      throw error;
+    }
+  };
+
   const navigateToScreen = (screenName) => {
     navigation.navigate(screenName);
   };
@@ -22,6 +51,16 @@ export default function MenuScreen({ navigation }) {
   const menuItems = [
     { text: 'Crear Reporte', imageSource: require('../../src/img/ReporteDes.png'), screenName: 'ReporteSSO' },
     { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'CorreccionSSO' },
+    {
+      text: 'Sincronizar Reportes',
+      imageSource: require('../../src/img/sincronizar.png'),
+      onPress: syncReportsWithServer,
+    },
+    {
+      text: 'Descargar Reportes',
+      imageSource: require('../../src/img/DescargarReporte.png'),
+      onPress: syncReportsWithServer,
+    },
   ];
 
   return (
@@ -30,7 +69,7 @@ export default function MenuScreen({ navigation }) {
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>
         <Image
-          source={require('../../src/img/logo-menu-2.png')}
+          source={require('../../src/img/logo_menu_2.jpg')}
           style={styles.headerImage}
         />
       </View>
