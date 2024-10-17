@@ -23,7 +23,7 @@ import { openDatabase } from 'react-native-sqlite-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { format } from 'date-fns';
 
-let db = openDatabase({ name: 'MadreTierraProduccion100.db' });
+let db = openDatabase({ name: 'PruebaDetalleFinal11.db' });
 
 export default function CrearInformeScreen() {
   const { user } = useAuth();
@@ -67,7 +67,8 @@ export default function CrearInformeScreen() {
 
   const fetchCatalogos = async () => {
     try {
-      const response = await axios.get('https://gdidev.sistemasmt.com.gt/api/v1/getCatalogos', {
+      //const apiUrl = 'http://100.10.10.198:3000/api/v1/uploadReportes';
+      const response = await axios.get('http://100.10.10.198:3000/api/v1/getCatalogos', {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -215,7 +216,7 @@ export default function CrearInformeScreen() {
       const base64Image = await RNFetchBlob.fs.readFile(imagePath, 'base64');
       
       const newHallazgo = { ...currentHallazgo };
-      newHallazgo.fotos[photoIndex] = `data:image/jpeg;base64,${base64Image}`; // Almacena la imagen como base64
+      newHallazgo.fotos[photoIndex] = `${base64Image}`; // Almacena la imagen como base64
       setCurrentHallazgo(newHallazgo);
     }
   };
@@ -231,7 +232,7 @@ export default function CrearInformeScreen() {
         const base64Image = await RNFetchBlob.fs.readFile(imagePath, 'base64');
         
         const newHallazgo = { ...currentHallazgo };
-        newHallazgo.fotos[photoIndex] = `data:image/jpeg;base64,${base64Image}`; // Almacena la imagen como base64
+        newHallazgo.fotos[photoIndex] = `${base64Image}`; // Almacena la imagen como base64
         setCurrentHallazgo(newHallazgo);
       }
     }
@@ -438,10 +439,10 @@ export default function CrearInformeScreen() {
               </div>
               <div class="images">
                 <div class="image-left">
-                  ${hallazgo.fotos[0] ? `<img src="${hallazgo.fotos[0]}" alt="Imagen 1">` : ''}
+                  ${hallazgo.fotos[0] ? `<img src="data:image/png;base64,${hallazgo.fotos[0]}" alt="Imagen 1">` : ''}
                 </div>            
                 <div class="image-right">
-                  ${hallazgo.fotos[1] ? `<img src="${hallazgo.fotos[1]}" alt="Imagen 2">` : ''}
+                  ${hallazgo.fotos[1] ? `<img src="data:image/png;base64,${hallazgo.fotos[1]}" alt="Imagen 2">` : ''}
                 </div>
               </div>
             </div>

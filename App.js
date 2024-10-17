@@ -19,7 +19,8 @@ const App = () => {
   const syncDataWithWebService = async () => {
     try {
       // Realiza la llamada al webservice para obtener usuarios
-      const response = await axios.get('https://gdidev.sistemasmt.com.gt/api/v1/getUsuarios');
+      
+      const response = await axios.get('http://100.10.10.198:3000/api/v1/getUsuarios');
       
       // Procesa la respuesta y realiza acciones necesarias
       const responseData = response.data;

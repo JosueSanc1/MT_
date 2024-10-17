@@ -73,7 +73,8 @@ export default function MenuScreen({ navigation }) {
   
     // Sincronizar informes con el servidor
     const syncReportsWithServer = async (reports) => {
-      const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadReportes';
+      //const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadReportes';
+      const apiUrl = 'http://100.10.10.198:3000/api/v1/uploadReportes';
   
       try {
         const response = await RNFetchBlob.fetch(
@@ -110,7 +111,8 @@ export default function MenuScreen({ navigation }) {
   
     // Sincronizar detalles con el servidor
     const syncDetailsWithServer = async (details) => {
-      const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadDetalles';
+      //const apiUrl = 'https://gdidev.sistemasmt.com.gt/api/v1/uploadDetalles';
+      const apiUrl = 'http://100.10.10.198:3000/api/v1/uploadReportes';
   
       try {
         const response = await RNFetchBlob.fetch(

@@ -11,7 +11,7 @@ import { openDatabase } from 'react-native-sqlite-storage';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-let db = openDatabase({ name: 'MadreTierraProduccion100.db' });
+let db = openDatabase({ name: 'PruebaDetalleFinal11.db' });
 // Definimos el color institucional
 const INSTITUTIONAL_GREEN = 'green'; // Reemplaza con el código exacto del color verde institucional
 
@@ -59,7 +59,7 @@ const ReporteDesechos = () => {
   const verDatosGuardados = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'SELECT * FROM DetalleReporteDesechos',
+        'SELECT * FROM ReporteDesechos',
         [],
         (tx, results) => {
           const rows = results.rows;
@@ -222,12 +222,12 @@ const ReporteDesechos = () => {
       // Crear tabla ReporteDesechos
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS ReporteDesechos (
-          IdReporte INTEGER PRIMARY KEY AUTOINCREMENT,
-          Reporte TEXT,
-          Responsable TEXT,
-          Proceso TEXT,
-          Observacion TEXT,
-          Fecha TEXT,
+          idreporte INTEGER PRIMARY KEY AUTOINCREMENT,
+          reporte TEXT,
+          responsable TEXT,
+          proceso TEXT,
+          observacion TEXT,
+          fecha TEXT,
           user_created_id INTEGER,
           usuario_movil_id INTEGER,
           estado NVARCHAR(50)
@@ -240,24 +240,25 @@ const ReporteDesechos = () => {
       // Crear tabla DetalleReporteDesechos
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS DetalleReporteDesechos (
-          IdDetalle INTEGER PRIMARY KEY AUTOINCREMENT,
-          IdReporte INTEGER,
-          Ubicaciones TEXT,
-          Suficientes INTEGER,
-          Rotulados INTEGER,
-          Tapados INTEGER,
-          Limpios INTEGER,
-          Ordenados INTEGER,
-          RecoleccionFrecuente INTEGER,
-          Carton INTEGER,
-          Plasticos INTEGER,
-          Metales INTEGER,
-          Organicos INTEGER,
-          Electronicos INTEGER,
+          id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
+          idreporte INTEGER,
+          ubicaciones TEXT,
+          suficientes INTEGER,
+          rotulados INTEGER,
+          tapados INTEGER,
+          limpios INTEGER,
+          ordenados INTEGER,
+          recoleccion_frecuente INTEGER,
+          carton INTEGER,
+          plasticos INTEGER,
+          metales INTEGER,
+          organicos INTEGER,
+          electronicos INTEGER,
           Inorganicos INTEGER,
-          porcentajeTotal INTEGER,
-          Observacion TEXT,
-          FOREIGN KEY (IdReporte) REFERENCES ReporteDesechos(IdReporte)
+          porcentaje_total INTEGER,
+          observacion TEXT,
+          estado Text,
+          FOREIGN KEY (idreporte) REFERENCES ReporteDesechos(idreporte)
         );`,
         [],
         () => console.log('Tabla DetalleReporteDesechos creada correctamente'),
@@ -594,12 +595,12 @@ const ReporteDesechos = () => {
       db.transaction(tx => {
         // Insertar en la tabla ReporteDesechos
         tx.executeSql(
-          `INSERT INTO ReporteDesechos (Reporte,Responsable, Proceso, Observacion, Fecha, user_created_id, usuario_movil_id, estado)
+          `INSERT INTO ReporteDesechos (reporte,responsable, proceso, observacion, fecha, user_created_id, usuario_movil_id, estado)
            VALUES (?, ?, ?, ?, ?, ?, ?,?)`,
           [
             pdfBase64, // el reporte en base64
             Responsable,
-            Proceso,
+            selectedArea,
             observaciones,
             formattedFecha,
             user.id,
@@ -612,8 +613,8 @@ const ReporteDesechos = () => {
             // Insertar cada detalle en la tabla DetalleReporteDesechos
             detalles.forEach(detalle => {
               tx.executeSql(
-                `INSERT INTO DetalleReporteDesechos (IdReporte, Ubicaciones, Suficientes, Rotulados, Tapados, Limpios, Ordenados, RecoleccionFrecuente, Carton, Plasticos, Metales, Organicos, Electronicos, Inorganicos, porcentajeTotal, Observacion)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO DetalleReporteDesechos (idReporte, ubicaciones, suficientes, rotulados, tapados, limpios, ordenados, recoleccion_frecuente, carton, plasticos, metales, organicos, electronicos, inorganicos, porcentaje_total, observacion, estado)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                  [
                   idReporte, // Clave foránea
                   detalle.ubicacion || '', // Asegurar que no sea undefined
@@ -630,7 +631,8 @@ const ReporteDesechos = () => {
                   detalle.electronicos || 0,
                   detalle.inorganicos || 0,
                   detalle.porcentajeTotal || 0,
-                  detalle.observacion || '' // Asegurar que no sea undefined
+                  detalle.observacion || '',
+                  "N", // Asegurar que no sea undefined
                 ],
                 () => console.log('Detalle insertado correctamente'),
                 error => console.log('Error al insertar detalle', error)
