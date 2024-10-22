@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, FlatList, TouchableOpacity, Image, BackHandler 
 import RNFetchBlob from 'rn-fetch-blob';
 import PDFView from 'react-native-pdf';
 import Share from 'react-native-share';
-import { Appbar, Card, Title } from 'react-native-paper';
+import { Appbar } from 'react-native-paper';
 
 export default function VisualizarInformesScreen() {
   const [pdfFiles, setPdfFiles] = useState([]);
@@ -56,7 +56,7 @@ export default function VisualizarInformesScreen() {
       <View style={styles.previewContainer}>
         <Image source={require('../src/img/archivo-pdf.png')} style={styles.previewImage} />
       </View>
-      <Text>{item}</Text>
+      <Text style={styles.pdfTitle}>{item}</Text>
     </TouchableOpacity>
   );
 
@@ -78,9 +78,12 @@ export default function VisualizarInformesScreen() {
 
   return (
     <View style={styles.container}>
-      <Appbar.Header style={{ backgroundColor: '#008000' }}>
-        <Appbar.BackAction onPress={() => setSelectedPdf(null)} />
-        <Appbar.Content title="Lista de Reportes" />
+      <Appbar.Header style={styles.header}>
+        <Appbar.Content title="Lista de Reportes" titleStyle={styles.headerTitle} />
+        <Image
+          source={require('../src/img/logo_menu_2.jpg')} // Asegúrate de que la ruta sea correcta
+          style={styles.logo}
+        />
       </Appbar.Header>
       {selectedPdf ? (
         <View style={styles.pdfView}>
@@ -100,6 +103,7 @@ export default function VisualizarInformesScreen() {
           data={pdfFiles}
           keyExtractor={(item) => item}
           renderItem={renderPdfItem}
+          contentContainerStyle={styles.listContainer}
         />
       )}
     </View>
@@ -109,17 +113,33 @@ export default function VisualizarInformesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
+  },
+  header: {
+    backgroundColor: '#008000', // Color verde para el encabezado
+    flexDirection: 'row',
+    alignItems: 'center', // Centrar verticalmente
+    justifyContent: 'space-between', // Espacio entre el texto y el logo
+    paddingHorizontal: 10,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginLeft: 10, // Espacio a la izquierda
+  },
+  headerTitle: {
+    color: 'white', // Texto del encabezado en blanco
   },
   pdfView: {
     flex: 1,
   },
   pdfItem: {
-    padding: 10,
+    padding: 15,
     borderBottomWidth: 1,
     borderColor: '#ccc',
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF', // Fondo blanco para los elementos de la lista
   },
   previewContainer: {
     marginRight: 10,
@@ -129,12 +149,20 @@ const styles = StyleSheet.create({
     height: 50,
     resizeMode: 'contain',
   },
+  pdfTitle: {
+    fontSize: 16,
+    color: '#333',
+  },
   shareButton: {
     backgroundColor: '#008000',
     padding: 10,
     alignItems: 'center',
+    marginTop: 10,
   },
   shareButtonText: {
     color: 'white',
+  },
+  listContainer: {
+    paddingBottom: 20,
   },
 });
