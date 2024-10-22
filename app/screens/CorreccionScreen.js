@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, View, Text, TextInput, Button, Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { openDatabase } from 'react-native-sqlite-storage';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import RNFetchBlob from 'rn-fetch-blob';
 import * as ImagePicker from 'react-native-image-picker';
 
 const db = openDatabase({ name: 'MadreTierraProduccion102.db' });
@@ -39,7 +40,7 @@ export default function CorreccionScreen({ route }) {
   };
 
   const handleGenerateCorrectedPDF = async () => {
-    const fechaCorreccion = new Date().toLocaleDateString();
+    const fechaCorreccion = new Date().toISOString();
 
     const detallesHTML = detalles
       .map((detalle) => {
@@ -138,6 +139,29 @@ export default function CorreccionScreen({ route }) {
 
     try {
       const pdfFile = await RNHTMLtoPDF.convert(options);
+      const pdfBase64 = await RNFetchBlob.fs.readFile(pdfFile.filePath, 'base64');
+
+      db.transaction((tx) => {
+        // Actualizar el reporte en base64 en la tabla ReporteSSO
+        tx.executeSql(
+          `UPDATE ReporteSSO SET reporte = ?, estado = 'Terminado' WHERE id = ?`,
+          [pdfBase64, reporte.id],
+          () => console.log('Reporte actualizado con éxito.'),
+          (error) => console.log('Error al actualizar el reporte:', error)
+        );
+
+        // Actualizar detalles con corrección y foto de corrección
+        detalles.forEach((detalle) => {
+          const correccion = correcciones[detalle.id_detalle] || {};
+          tx.executeSql(
+            `UPDATE DetalleSSO SET fecha_correccion = ?, correccion_foto = ?, estado = 'Terminado' WHERE id_detalle = ?`,
+            [fechaCorreccion, correccion.correccion_foto || '', detalle.id_detalle],
+            () => console.log('Detalle actualizado con éxito.'),
+            (error) => console.log('Error al actualizar el detalle:', error)
+          );
+        });
+      });
+
       Alert.alert('Éxito', `PDF corregido generado en: ${pdfFile.filePath}`);
     } catch (error) {
       Alert.alert('Error', 'Hubo un problema al generar el PDF');
@@ -176,12 +200,6 @@ export default function CorreccionScreen({ route }) {
             style={styles.image}
           />
           <Text style={styles.label}>Corrección:</Text>
-          <TextInput
-            value={correcciones[detalle.id_detalle]?.correccion || ''}
-            onChangeText={(value) => handleCorreccionChange(detalle.id_detalle, value, 'correccion')}
-            style={styles.input}
-            placeholder="Escribe la corrección"
-          />
           <TouchableOpacity
             style={styles.button}
             onPress={() => pickImageForCorrection(detalle.id_detalle)}

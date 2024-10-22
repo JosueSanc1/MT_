@@ -27,7 +27,7 @@ export default function InformeInspeccionScreen() {
   const verDatosGuardados = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'SELECT * FROM DetalleSSO WHERE estado = "Terminado" ',
+        'SELECT * FROM DetalleSSO WHERE id_bd = 4 ',
         [],
         (tx, results) => {
           const rows = results.rows;
@@ -57,24 +57,26 @@ export default function InformeInspeccionScreen() {
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS ReporteSSO (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id_bd INTEGER,
           reporte TEXT,
           responsable INTEGER,
           fecha_hallazgo TEXT,
           area TEXT,
           estado TEXT,
-          sincronizado TEXT
+          sincronizado TEXT 
         );`
       );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS DetalleSSO (
           id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
-          IdReporte INTEGER,
+          id_bd INTEGER,
+          idreporte INTEGER,
           hallazgo TEXT,
           recomendacion TEXT,
           hallazgo_foto TEXT,
           estado TEXT,
           sincronizado TEXT,
-          correccion TEXT,
+          fecha_correccion TEXT,
           correccion_foto TEXT,
           FOREIGN KEY (IdReporte) REFERENCES ReporteSSO (id)
         );`
