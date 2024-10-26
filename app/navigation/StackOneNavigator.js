@@ -17,6 +17,7 @@ import SSO from "../screens/Menus/MenuSSO"
 import ReporteSSO from "../screens/ReporteSSO";
 import CorreccionSSO from "../screens/CorreccionSSO";
 import CorreccionScreen from "../screens/CorreccionScreen"
+import listaReporteSSO from "../screens/SSO/ListaReporteSSO"
 const Stack = createStackNavigator();
 
 const StackOneNavigator = () => (
@@ -97,6 +98,11 @@ const StackOneNavigator = () => (
     <Stack.Screen
     name="CorreccionScreen"
     component={CorreccionScreen}
+    options={{ headerShown: false }}
+    />
+    <Stack.Screen
+    name="ListaSSO"
+    component={listaReporteSSO}
     options={{ headerShown: false }}
     />
   </Stack.Navigator>

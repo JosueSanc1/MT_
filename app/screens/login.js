@@ -32,16 +32,16 @@ const Login =({navigation})=> {  //creamos contantes para la validacion de datos
             const user = result.rows.item(0);
             dispatch({
               type: 'SET_USER',
-              payload: { token: user.token, id: user.id },
+              payload: { token: user.token, id: user.id, nombre: user.nombre },
             });
   
             // Redirigir según el rol
             if (user.rol_movil_id === 1) {
               Alert.alert('Inicio de sesión exitoso como Operador');
-              navigation.navigate('Menú Operador', { userToken: user.token, userID: user.id });
+              navigation.navigate('Menú Operador', { userToken: user.token, userID: user.id, userNombre: user.nombre });
             } else if (user.rol_movil_id === 2) {
               Alert.alert('Inicio de sesión exitoso como Administrador');
-              navigation.navigate('Menú', { userToken: user.token, userID: user.id });
+              navigation.navigate('Menú', { userToken: user.token, userID: user.id, userNombre: user.nombre});
             } else {
               // Otros roles o manejar de alguna otra manera
               Alert.alert('Rol no reconocido');

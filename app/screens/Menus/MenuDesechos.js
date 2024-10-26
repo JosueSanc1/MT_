@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import RNFetchBlob from 'rn-fetch-blob';
 import { openDatabase } from 'react-native-sqlite-storage';
 import { useAuth } from '../AuthContext';
 const db = openDatabase({ name: 'PruebaDetalleFinal11.db', location: 'default' });
+
+const { width } = Dimensions.get('window');
 
 export default function MenuDesechos() {
   const navigation = useNavigation();
@@ -154,16 +164,28 @@ export default function MenuDesechos() {
     }
   };
 
+  const navigateToScreen = (screenName) => {
+    navigation.navigate(screenName);
+  };
+
   // Menú de reportes de desechos
   const menuItems = [
     { text: 'Crear Reporte', imageSource: require('../../src/img/ReporteDes.png'), screenName: 'Reporte Desechos' },
-    { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'Lista de Reportes' },
+    { text: 'Listas de Reportes', imageSource: require('../../src/img/listaReporte.png'), screenName: 'Lista de Reportes' },
     {
       text: 'Sincronizar Reportes',
       imageSource: require('../../src/img/sincronizar.png'),
       onPress: handleSyncReports, // Llamada directa a la función de sincronización
     },
+    
   ];
+  const handleMenuItemPress = (screenName, onPress) => {
+    if (onPress) {
+      onPress(); // Ejecutar la función personalizada si está definida
+    } else {
+      navigateToScreen(screenName); // Navegar a la pantalla si no hay función personalizada
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -174,20 +196,22 @@ export default function MenuDesechos() {
           style={styles.headerImage}
         />
       </View>
-
+      <Text> </Text>
       <Text style={styles.header}>Menu de Reportes de Desechos</Text>
 
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
-            key={index}
-            style={styles.menuButton}
-            onPress={item.onPress ? item.onPress : () => navigation.navigate(item.screenName)}
-          >
-            <Image source={item.imageSource} style={styles.buttonImage} />
-            <Text style={styles.buttonText}>{item.text}</Text>
-          </TouchableOpacity>
+          key={index}
+          style={styles.menuButton}
+          onPress={() => handleMenuItemPress(item.screenName, item.onPress)}
+        >
+          <Image source={item.imageSource} style={styles.buttonImage} />
+          <Text style={styles.buttonText}>{item.text}</Text>
+        </TouchableOpacity>
         ))}
+
+        
       </View>
     </View>
   );
@@ -206,46 +230,46 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     position: 'absolute',
-    marginBottom: 10,
+    marginBottom:10,
     top: 0,
   },
   headerText: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
     textAlign: 'center',
+    fontSize: 20,
+    color: 'white',
+    fontWeight: 'bold',
   },
   headerImage: {
-    width: 60,
-    height: 60,
-    resizeMode: 'contain',
+    width: 100,
+    height: 80,
+    marginLeft: 10,
   },
   header: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
     marginBottom: 20,
-    marginTop: 120,
   },
   menuContainer: {
-    width: '90%',
-    flexDirection: 'column',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   menuButton: {
-    flexDirection: 'row',
+    backgroundColor: 'white',
+    width: (width / 2) - 16,
+    margin: 8,
+    padding: 10,
+    borderRadius: 5,
+    borderColor: 'black',
+    borderWidth: 1,
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: 'lightgray',
-    marginVertical: 10,
-    borderRadius: 10,
   },
   buttonImage: {
     width: 50,
     height: 50,
-    marginRight: 15,
   },
   buttonText: {
+    color: 'black',
     fontSize: 18,
-    fontWeight: 'bold',
   },
 });

@@ -19,6 +19,7 @@ const { width } = Dimensions.get('window');
 const db = openDatabase({ name: 'MadreTierraProduccion102.db' });
 
 export default function MenuScreen({ navigation }) {
+  
   const { user } = useAuth();
 
   // Obtener reportes no sincronizados
@@ -222,7 +223,8 @@ export default function MenuScreen({ navigation }) {
 
   const menuItems = [
     { text: 'Crear Reporte', imageSource: require('../../src/img/ReporteDes.png'), screenName: 'ReporteSSO' },
-    { text: 'Listas de Reportes', imageSource: require('../../src/img/ReportesDesechos.png'), screenName: 'CorreccionSSO' },
+    { text: 'Agregar Correccion', imageSource: require('../../src/img/control-de-calidad.png'), screenName: 'CorreccionSSO' },
+    { text: 'Listas de Reportes', imageSource: require('../../src/img/listaReporte.png'), screenName: 'ListaSSO' },
     {
       text: 'Sincronizar Reportes',
       imageSource: require('../../src/img/sincronizar.png'),
@@ -233,94 +235,100 @@ export default function MenuScreen({ navigation }) {
       imageSource: require('../../src/img/DescargarReporte.png'),
       onPress: downloadReportsWithServer,
     }
+
+    
   ];
+  const handleMenuItemPress = (screenName, onPress) => {
+    if (onPress) {
+      onPress(); // Ejecutar la función personalizada si está definida
+    } else {
+      navigateToScreen(screenName); // Navegar a la pantalla si no hay función personalizada
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="green" barStyle="light-content" />
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>
         <Image
-          source={require('../../src/img/logo_menu_2.jpg')}
+          source={require('../../src/img/logo-menu-2.png')}
           style={styles.headerImage}
         />
       </View>
-      <Text style={styles.subHeader}>Menú de Reportes SSO</Text>
+      <Text> </Text>
+      <Text style={styles.header}>Menu de Reportes de SSO</Text>
 
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
-            key={index}
-            style={styles.menuButton}
-            onPress={() => (item.onPress ? item.onPress() : navigateToScreen(item.screenName))}
-          >
-            <Image source={item.imageSource} style={styles.buttonImage} />
-            <Text style={styles.buttonText}>{item.text}</Text>
-          </TouchableOpacity>
+          key={index}
+          style={styles.menuButton}
+          onPress={() => handleMenuItemPress(item.screenName, item.onPress)}
+        >
+          <Image source={item.imageSource} style={styles.buttonImage} />
+          <Text style={styles.buttonText}>{item.text}</Text>
+        </TouchableOpacity>
         ))}
+
+        
       </View>
     </View>
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerContainer: {
     backgroundColor: 'green',
     flexDirection: 'row',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    position: 'absolute',
+    marginBottom:10,
+    top: 0,
   },
   headerText: {
-    fontSize: 24,
-    color: '#ECF0F1',
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 20,
+    color: 'white',
     fontWeight: 'bold',
   },
   headerImage: {
-    width: 60,
-    height: 60,
+    width: 100,
+    height: 80,
+    marginLeft: 10,
   },
-  subHeader: {
-    fontSize: 20,
-    marginTop: 20,
-    textAlign: 'center',
-    color: 'green',
-    fontWeight: '500',
+  header: {
+    fontSize: 24,
+    marginBottom: 20,
   },
   menuContainer: {
-    marginTop: 40,
-    paddingHorizontal: 20,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   menuButton: {
-    backgroundColor: '#FFFFFF',
-    width: (width / 2) - 30,
-    marginVertical: 10,
-    paddingVertical: 20,
-    borderRadius: 10,
+    backgroundColor: 'white',
+    width: (width / 2) - 16,
+    margin: 8,
+    padding: 10,
+    borderRadius: 5,
+    borderColor: 'black',
+    borderWidth: 1,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
   },
   buttonImage: {
-    width: 40,
-    height: 40,
-    marginBottom: 10,
+    width: 50,
+    height: 50,
   },
   buttonText: {
-    fontSize: 16,
-    color: 'green',
-    fontWeight: '500',
+    color: 'black',
+    fontSize: 18,
   },
 });

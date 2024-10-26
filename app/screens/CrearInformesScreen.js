@@ -68,7 +68,7 @@ export default function CrearInformeScreen() {
   const fetchCatalogos = async () => {
     try {
       //const apiUrl = 'http://100.10.10.198:3000/api/v1/uploadReportes';
-      const response = await axios.get('http://100.10.10.198:3000/api/v1/getCatalogos', {
+      const response = await axios.get('https://gdidev.sistemasmt.com.gt/api/v1/getCatalogos', {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -111,7 +111,7 @@ export default function CrearInformeScreen() {
   const verDatosGuardados = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'SELECT * FROM DetalleInforme',
+        'SELECT * FROM Pagos',
         [],
         (tx, results) => {
           const rows = results.rows;
@@ -464,7 +464,7 @@ export default function CrearInformeScreen() {
       const pdfFile = await RNHTMLtoPDF.convert(options);
       const pdfBase64 = await RNFetchBlob.fs.readFile(pdfFile.filePath, 'base64');
       
-      const destinationPath = `${informesDir}/Informe_${formattedDate}.pdf`;
+      const destinationPath = `${informesDir}/Inspeccion_${areaName}_${formattedDate}.pdf`;
   
       db.transaction(txn => {
         // Inserción del informe en `table_informes`
@@ -601,7 +601,7 @@ export default function CrearInformeScreen() {
         <View style={styles.container}>
           {currentHallazgo.fotos[0] ? (
             <Image
-              source={{ uri: currentHallazgo.fotos[0] }}
+              source={{ uri: `data:image/png;base64,${currentHallazgo.fotos[0]}` }}
               style={styles.evidenceImage}
             />
           ) : (
@@ -621,7 +621,7 @@ export default function CrearInformeScreen() {
         <View style={styles.container}>
           {currentHallazgo.fotos[1] ? (
             <Image
-              source={{ uri: currentHallazgo.fotos[1] }}
+              source={{ uri: `data:image/png;base64,${currentHallazgo.fotos[1]}` }}
               style={styles.evidenceImage}
             />
           ) : (
