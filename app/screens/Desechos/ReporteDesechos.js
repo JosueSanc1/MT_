@@ -4,7 +4,7 @@ import { TextInput, Button, Appbar, Card, Title, Divider, Menu} from 'react-nati
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFetchBlob from 'rn-fetch-blob';
 import moment from 'moment';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../Configuracion/AuthContext';
 import axios from 'axios';
 
 import { openDatabase } from 'react-native-sqlite-storage';
@@ -228,7 +228,7 @@ const ReporteDesechos = () => {
           metales INTEGER,
           organicos INTEGER,
           electronicos INTEGER,
-          Inorganicos INTEGER,
+          inorganicos INTEGER,
           porcentaje_total INTEGER,
           observacion TEXT,
           estado Text,
@@ -667,7 +667,7 @@ const ReporteDesechos = () => {
        <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>
         <Image
-          source={require('../src/img/logo-menu-2.png')} // Reemplaza con la ruta correcta de tu imagen
+          source={require('../../src/img/logo-menu-2.png')} // Reemplaza con la ruta correcta de tu imagen
           style={styles.headerImage}
         />
       </View>

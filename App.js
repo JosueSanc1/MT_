@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AuthProvider } from './app/screens/AuthContext';
+import { AuthProvider } from './app/screens/Configuracion/AuthContext';
 import StackOneNavigator from './app/navigation/StackOneNavigator';
 import axios from 'axios'; // Importa axios si aún no lo has hecho
 import { openDatabase } from 'react-native-sqlite-storage';
@@ -20,7 +20,7 @@ const App = () => {
     try {
       // Realiza la llamada al webservice para obtener usuarios
       
-      const response = await axios.get('https://gdidev.sistemasmt.com.gt/api/v1/getUsuarios');
+      const response = await axios.get('http://100.10.10.198:3000/api/v1/getUsuarios');
       
       // Procesa la respuesta y realiza acciones necesarias
       const responseData = response.data;

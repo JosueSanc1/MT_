@@ -7,6 +7,32 @@ const db = openDatabase({ name: 'PruebaDetalleFinal11.db' });
 export default function ListarReportesScreen({ navigation }) {
   const [reportes, setReportes] = useState([]);
 
+  const verDatosGuardados = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM ReporteSSO',
+        [],
+        (tx, results) => {
+          const rows = results.rows;
+          let data = [];
+
+          for (let i = 0; i < rows.length; i++) {
+            data.push(rows.item(i));
+          }
+
+          console.log("Datos guardados en ReporteDesechos:", data);
+        },
+        (tx, error) => {
+          console.log("Error al consultar la tabla ReporteDesechos:", error);
+        }
+      );
+    });
+  };
+       // useEffect para ejecutar la consulta cuando la vista se carga
+  useEffect(() => {
+    verDatosGuardados(); // Llamar la función para ver los datos guardados cuando el componente se monta
+  }, []);
+
   // Obtener los reportes con estado "PDC"
   useEffect(() => {
     db.transaction((tx) => {
@@ -43,7 +69,7 @@ export default function ListarReportesScreen({ navigation }) {
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>
         <Image
-          source={require('../src/img/logo-menu-2.png')}
+          source={require('../../src/img/logo-menu-2.png')}
           style={styles.headerImage}
         />
       </View>

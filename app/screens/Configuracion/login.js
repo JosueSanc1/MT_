@@ -66,7 +66,7 @@ const Login =({navigation})=> {  //creamos contantes para la validacion de datos
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>                           
         <Image
-          source= {require('../src/img/logo-menu-2.png')}
+          source= {require('../../src/img/logo-menu-2.png')}
           style={styles.headerImage}
         />
       </View>

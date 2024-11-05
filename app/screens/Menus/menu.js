@@ -11,7 +11,7 @@ import {
 import RNFetchBlob from 'rn-fetch-blob';
 import { openDatabase } from 'react-native-sqlite-storage';
 import moment from 'moment';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../Configuracion/AuthContext';
 
 
 

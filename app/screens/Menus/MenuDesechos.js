@@ -11,7 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import RNFetchBlob from 'rn-fetch-blob';
 import { openDatabase } from 'react-native-sqlite-storage';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../Configuracion/AuthContext';
 const db = openDatabase({ name: 'PruebaDetalleFinal11.db', location: 'default' });
 
 const { width } = Dimensions.get('window');
@@ -23,6 +23,32 @@ export default function MenuDesechos() {
   const { user } = useAuth()
   useEffect(() => {
     fetchUnsyncedData(); // Llama a la función al cargar el componente
+  }, []);
+
+  const verDatosGuardados = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM DetalleReporteDesechos',
+        [],
+        (tx, results) => {
+          const rows = results.rows;
+          let data = [];
+
+          for (let i = 0; i < rows.length; i++) {
+            data.push(rows.item(i));
+          }
+
+          console.log("Datos guardados en ReporteDesechos:", data);
+        },
+        (tx, error) => {
+          console.log("Error al consultar la tabla ReporteDesechos:", error);
+        }
+      );
+    });
+  };
+       // useEffect para ejecutar la consulta cuando la vista se carga
+  useEffect(() => {
+    verDatosGuardados(); // Llamar la función para ver los datos guardados cuando el componente se monta
   }, []);
 
   const fetchUnsyncedData = async () => {
@@ -37,7 +63,7 @@ export default function MenuDesechos() {
     return new Promise((resolve, reject) => {
       db.transaction((txn) => {
         txn.executeSql(
-          'SELECT * FROM ReporteDesechos WHERE estado != "S"',
+          'SELECT * FROM ReporteDesechos WHERE estado = "N"',
           [],
           (_, result) => {
             const reports = [];
@@ -60,7 +86,7 @@ export default function MenuDesechos() {
     return new Promise((resolve, reject) => {
       db.transaction((txn) => {
         txn.executeSql(
-          'SELECT * FROM DetalleReporteDesechos WHERE estado != "S"',
+          'SELECT * FROM DetalleReporteDesechos WHERE estado = "N"',
           [],
           (_, result) => {
             const details = [];

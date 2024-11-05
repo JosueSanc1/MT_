@@ -9,14 +9,14 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../Configuracion/AuthContext';
 import RNFetchBlob from 'rn-fetch-blob';
 import { openDatabase } from 'react-native-sqlite-storage';
 
 const { width } = Dimensions.get('window');
 
 // Abrir la base de datos
-const db = openDatabase({ name: 'MadreTierraProduccion102.db' });
+const db = openDatabase({ name: 'PruebaDetalleFinal11.db' });
 
 export default function MenuScreen({ navigation }) {
   
@@ -27,7 +27,7 @@ export default function MenuScreen({ navigation }) {
     return new Promise((resolve, reject) => {
       db.transaction((tx) => {
         tx.executeSql(
-          'SELECT * FROM ReporteSSO WHERE sincronizado = "SPC"',
+          'SELECT * FROM ReporteSSO WHERE estado = "PDC"',
           [],
           (tx, results) => {
             const reports = [];
@@ -50,7 +50,7 @@ export default function MenuScreen({ navigation }) {
     return new Promise((resolve, reject) => {
       db.transaction((tx) => {
         tx.executeSql(
-          'SELECT * FROM DetalleSSO WHERE idreporte = ? AND sincronizado = "SPC"',
+          'SELECT * FROM DetalleSSO WHERE idreporte = ? AND estado = "PDC"',
           [reportId],
           (tx, results) => {
             const details = [];
@@ -89,7 +89,7 @@ export default function MenuScreen({ navigation }) {
     });
   };
 
-  // Actualizar el campo id_bd en la base de datos local
+  // Actualizar el campo id_bd en la base de datos local para ReporteSSO
   const updateIdBdInLocalDb = (reporteProcesado) => {
     db.transaction((tx) => {
       reporteProcesado.forEach((reporte) => {
@@ -101,6 +101,24 @@ export default function MenuScreen({ navigation }) {
           },
           (error) => {
             console.error('Error al actualizar id_bd en la base de datos local', error);
+          }
+        );
+      });
+    });
+  };
+
+  // Actualizar el campo id_bd en la base de datos local para DetalleSSO
+  const updateIdBdInDetails = (detalleProcesado) => {
+    db.transaction((tx) => {
+      detalleProcesado.forEach((detalle) => {
+        tx.executeSql(
+          `UPDATE DetalleSSO SET id_bd = ? WHERE id_detalle = ?`,
+          [detalle.id_bd, detalle.id],
+          (_, result) => {
+            console.log(`Detalle con id ${detalle.id} actualizado con id_bd ${detalle.id_bd}`);
+          },
+          (error) => {
+            console.error('Error al actualizar id_bd en DetalleSSO', error);
           }
         );
       });
@@ -151,9 +169,14 @@ export default function MenuScreen({ navigation }) {
       if (responseData.status === 200) {
         console.log('Sincronización exitosa:', responseData);
 
-        // Actualizar el campo id_bd en la base de datos local
+        // Actualizar el campo id_bd en la base de datos local para ReporteSSO
         if (responseData.reporte_procesado && responseData.reporte_procesado.length > 0) {
           updateIdBdInLocalDb(responseData.reporte_procesado);
+        }
+
+        // Actualizar el campo id_bd en la base de datos local para DetalleSSO
+        if (responseData.detalle_procesado && responseData.detalle_procesado.length > 0) {
+          updateIdBdInDetails(responseData.detalle_procesado);
         }
 
         // Marcar reportes y detalles como sincronizados
@@ -235,9 +258,8 @@ export default function MenuScreen({ navigation }) {
       imageSource: require('../../src/img/DescargarReporte.png'),
       onPress: downloadReportsWithServer,
     }
-
-    
   ];
+
   const handleMenuItemPress = (screenName, onPress) => {
     if (onPress) {
       onPress(); // Ejecutar la función personalizada si está definida
@@ -269,8 +291,6 @@ export default function MenuScreen({ navigation }) {
           <Text style={styles.buttonText}>{item.text}</Text>
         </TouchableOpacity>
         ))}
-
-        
       </View>
     </View>
   );

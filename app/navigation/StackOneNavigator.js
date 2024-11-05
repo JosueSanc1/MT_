@@ -2,21 +2,20 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import React from 'react';
 import { NavigationContainer } from "@react-navigation/native";
-import Login from "../screens/login";
+import Login from "../screens/Configuracion/login";
 import Menu from "../screens/Menus/menu";
-import CrudScreen from "../screens/CrudScreen";
-import CrearInformesScreen from "../screens/CrearInformesScreen";
-import InformesScreen from "../screens/InformesScreen";
-import Usuarios from "../screens/Usuarios"; //importamos los componentes
+import CrearInformesScreen from "../screens/Inspeccion/CrearInformesScreen";
+import InformesScreen from "../screens/Inspeccion/InformesScreen";
+import Usuarios from "../screens/Configuracion/Usuarios"; //importamos los componentes
 import MenuOperador from "../screens/Menus/menuOperador"
 import MenuInspeccion from "../screens/Menus/MenuInspeccion"
 import MenuDesechos from "../screens/Menus/MenuDesechos"
-import ReporteDesechos from "../screens/ReporteDesechos"
-import ListaReportes from "../screens/ListaReportes";
+import ReporteDesechos from "../screens/Desechos/ReporteDesechos"
+import ListaReportes from "../screens/Desechos/ListaReportes";
 import SSO from "../screens/Menus/MenuSSO"
-import ReporteSSO from "../screens/ReporteSSO";
-import CorreccionSSO from "../screens/CorreccionSSO";
-import CorreccionScreen from "../screens/CorreccionScreen"
+import ReporteSSO from "../screens/SSO/ReporteSSO";
+import CorreccionSSO from "../screens/SSO/CorreccionSSO";
+import CorreccionScreen from "../screens/SSO/CorreccionScreen"
 import listaReporteSSO from "../screens/SSO/ListaReporteSSO"
 const Stack = createStackNavigator();
 
@@ -39,11 +38,7 @@ const StackOneNavigator = () => (
       component={MenuOperador} 
       options={{ headerShown: false }} 
     />
-    <Stack.Screen 
-      name="CRUD" 
-      component={CrudScreen} 
-      options={{ headerShown: false }} 
-    />
+    
     <Stack.Screen 
       name="Crear Informes" 
       component={CrearInformesScreen} 

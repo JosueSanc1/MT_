@@ -54,7 +54,7 @@ export default function VisualizarInformesScreen() {
       onPress={() => setSelectedPdf(item)}
     >
       <View style={styles.previewContainer}>
-        <Image source={require('../src/img/archivo-pdf.png')} style={styles.previewImage} />
+        <Image source={require('../../src/img/archivo-pdf.png')} style={styles.previewImage} />
       </View>
       <Text style={styles.pdfTitle}>{item}</Text>
     </TouchableOpacity>
@@ -81,7 +81,7 @@ export default function VisualizarInformesScreen() {
       <Appbar.Header style={styles.header}>
         <Appbar.Content title="Lista de Reportes" titleStyle={styles.headerTitle} />
         <Image
-          source={require('../src/img/logo_menu_2.jpg')} // Asegúrate de que la ruta sea correcta
+          source={require('../../src/img/logo_menu_2.jpg')} // Asegúrate de que la ruta sea correcta
           style={styles.logo}
         />
       </Appbar.Header>

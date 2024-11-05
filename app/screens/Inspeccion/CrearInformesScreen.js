@@ -17,7 +17,7 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFetchBlob from 'rn-fetch-blob';
 import { Picker } from '@react-native-picker/picker';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../Configuracion/AuthContext';
 import axios from 'axios';
 import { openDatabase } from 'react-native-sqlite-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -68,7 +68,7 @@ export default function CrearInformeScreen() {
   const fetchCatalogos = async () => {
     try {
       //const apiUrl = 'http://100.10.10.198:3000/api/v1/uploadReportes';
-      const response = await axios.get('https://gdidev.sistemasmt.com.gt/api/v1/getCatalogos', {
+      const response = await axios.get('http://100.10.10.198:3000/api/v1/getCatalogos', {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -541,7 +541,7 @@ export default function CrearInformeScreen() {
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Ingenio Madre Tierra</Text>
         <Image
-          source={require('../src/img/logo-menu-2.png')}
+          source={require('../../src/img/logo-menu-2.png')}
           style={styles.headerImage}
         />
       </View>
